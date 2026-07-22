@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quitvape-v4';
+const CACHE_NAME = 'quitvape-v5';
 const APP_SHELL = [
   './',
   './index.html',
@@ -8,10 +8,7 @@ const APP_SHELL = [
   './js/techniques.js',
   './js/achievements.js',
   './js/retrospective.js',
-  './manifest.json',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/apple-touch-icon.png'
+  './manifest.json'
 ];
 
 self.addEventListener('install', event => {
@@ -32,6 +29,12 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
+
+  // Иконки никогда не проходят через кеш service worker — iOS запрашивает их
+  // напрямую при «Добавить на экран Домой», и раньше это приводило к тому, что
+  // новая иконка не подхватывалась, пока не обновится сам service worker.
+  if (event.request.url.includes('/icons/')) return;
+
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;

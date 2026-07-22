@@ -4,13 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <title>QuitVape</title>
-<meta name="theme-color" content="#0f1720">
+<meta name="theme-color" content="#eef4ec">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="QuitVape">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -20,133 +23,159 @@
   <!-- ===== ГЛАВНАЯ ===== -->
   <section id="screen-main" class="screen screen-active">
     <header class="topbar">
-      <h1>QuitVape</h1>
+      <div class="brand">
+        <div class="mark"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 4 13c0-5 4-9 9-9 3 0 5 1 7 2 0 6-3 14-9 14Z"/><path d="M8 17c1.5-3 4-5 8-6"/></svg></div>
+        <h1>QuitVape</h1>
+      </div>
     </header>
 
-    <div class="counter-card">
-      <div class="counter-label">Без вейпа</div>
-      <div class="counter-time" id="time-since">
-        <span id="time-days">0</span><span class="unit">дн</span>
-        <span id="time-hours">0</span><span class="unit">ч</span>
-        <span id="time-minutes">0</span><span class="unit">мин</span>
-      </div>
-    </div>
-
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-value" id="money-saved">0 ₽</div>
-        <div class="stat-label">Сэкономлено</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="disposables-saved">0</div>
-        <div class="stat-label">не куплено одноразок</div>
-      </div>
-    </div>
-
-    <div class="stat-card resisted-card">
-      <div class="stat-value" id="cravings-resisted">0</div>
-      <div class="stat-label">раз устоял против тяги</div>
-    </div>
-
-    <button id="craving-btn" class="craving-btn">Хочу вейпить</button>
-
-    <details class="health-note">
-      <summary>Что происходит с тягой</summary>
-      <p>
-        Острая тяга к никотину обычно накатывает волной и стихает сама в течение нескольких минут —
-        именно поэтому имеет смысл просто переждать и отвлечься на технику ниже. В первые дни без никотина
-        такие волны случаются чаще, а дальше — реже. Организму нужно время, чтобы дофаминовые рецепторы
-        отвыкли получать никотин извне; конкретные сроки у всех разные.
-      </p>
-    </details>
-
-    <details class="settings-note">
-      <summary>Настройки и данные</summary>
-
-      <div class="setting-row">
-        <div class="setting-text">
-          <div class="setting-title">Точка отсчёта</div>
-          <div class="setting-sub" id="start-current">—</div>
+    <div class="scroll">
+      <div class="hero">
+        <div class="hero-label">Без вейпа уже</div>
+        <div class="ring" id="progress-ring">
+          <div class="ring-inner">
+            <div class="big"><span id="time-days">0</span><small>дн</small></div>
+            <div class="sub"><span id="time-hours">0</span> ч <span id="time-minutes">0</span> мин</div>
+          </div>
         </div>
-        <button class="secondary-btn compact" id="edit-start-btn">Изменить</button>
+        <div class="hero-caption" id="hero-caption">Первая веха ещё впереди</div>
       </div>
 
-      <div class="setting-block">
-        <div class="setting-title">Резервная копия</div>
-        <div class="setting-sub" id="backup-status">Проверяю защиту хранилища…</div>
-        <div class="backup-buttons">
-          <button class="secondary-btn compact" id="export-btn">Сохранить в файл</button>
-          <button class="secondary-btn compact" id="import-btn">Восстановить из файла</button>
+      <div class="stats-row">
+        <div class="stat">
+          <div class="ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="7" rx="7" ry="3.2"/><path d="M5 7v5c0 1.8 3.1 3.2 7 3.2s7-1.4 7-3.2V7"/><path d="M5 12v5c0 1.8 3.1 3.2 7 3.2s7-1.4 7-3.2v-5"/></svg></div>
+          <div class="v" id="money-saved">0 ₽</div>
+          <div class="l">сэкономлено</div>
         </div>
-        <input type="file" id="import-file" accept="application/json,.json" hidden>
+        <div class="stat">
+          <div class="ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5Z"/><path d="m3.5 7.5 8.5 4.5 8.5-4.5"/><path d="M12 21v-9"/></svg></div>
+          <div class="v" id="disposables-saved">0</div>
+          <div class="l">не куплено одноразок</div>
+        </div>
       </div>
-    </details>
+
+      <div class="resisted">
+        <div class="ico"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 5 6v5c0 4.3 3 7.4 7 9 4-1.6 7-4.7 7-9V6Z"/><path d="m9 11.5 2 2 4-4"/></svg></div>
+        <div><div class="v" id="cravings-resisted">0</div><div class="l">раз устоял против тяги</div></div>
+      </div>
+
+      <button id="craving-btn" class="craving-btn">Хочу вейпить</button>
+
+      <div class="card">
+        <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c2 0 2.5-5 5-5s2.5 10 5 10 3-5 5-5 2 .5 3 .5"/></svg>Что происходит с тягой</h3>
+        <p>
+          Острая тяга к никотину обычно накатывает волной и стихает сама в течение нескольких минут —
+          именно поэтому имеет смысл просто переждать и отвлечься на технику ниже. В первые дни без никотина
+          такие волны случаются чаще, а дальше — реже. Организму нужно время, чтобы дофаминовые рецепторы
+          отвыкли получать никотин извне; конкретные сроки у всех разные.
+        </p>
+        <div class="wave"><span style="height:30%"></span><span style="height:55%"></span><span style="height:85%"></span><span style="height:100%"></span><span style="height:70%"></span><span style="height:40%"></span><span style="height:22%"></span><span style="height:15%"></span></div>
+      </div>
+
+      <details class="settings-row">
+        <summary><span>Настройки и данные</span><span class="chev">›</span></summary>
+
+        <div class="setting-row">
+          <div class="setting-text">
+            <div class="setting-title">Точка отсчёта</div>
+            <div class="setting-sub" id="start-current">—</div>
+          </div>
+          <button class="ghost-btn compact" id="edit-start-btn">Изменить</button>
+        </div>
+
+        <div class="setting-block">
+          <div class="setting-title">Резервная копия</div>
+          <div class="setting-sub" id="backup-status">Проверяю защиту хранилища…</div>
+          <div class="backup-buttons">
+            <button class="ghost-btn compact" id="export-btn">Сохранить в файл</button>
+            <button class="ghost-btn compact" id="import-btn">Восстановить из файла</button>
+          </div>
+          <input type="file" id="import-file" accept="application/json,.json" hidden>
+        </div>
+      </details>
+    </div>
+
+    <nav class="tabbar">
+      <button class="tab tab-active" data-screen="screen-main"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11 12 4l8 7"/><path d="M6 10v8a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-8"/><path d="M10 19v-5h4v5"/></svg>Главная</button>
+      <button class="tab" data-screen="screen-achievements"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="5"/><path d="m9 13-1.5 7L12 18l4.5 2L15 13"/></svg>Достижения</button>
+      <button class="tab" data-screen="screen-retro"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4"/><path d="M4 20h16"/><path d="m7 15 3.5-4 3 2.5L20 7"/></svg>Ретроспектива</button>
+    </nav>
   </section>
 
   <!-- ===== ДОСТИЖЕНИЯ ===== -->
   <section id="screen-achievements" class="screen">
-    <header class="topbar">
-      <h1>Достижения</h1>
-    </header>
-    <div id="achievements-list" class="achievements-list"></div>
+    <div class="scroll">
+      <header class="topbar-in"><h1>Достижения</h1><p id="ach-subtitle">—</p></header>
+      <div class="progress-card">
+        <div class="row"><b id="progress-next-label">—</b><span id="progress-next-sub">—</span></div>
+        <div class="track"><i id="progress-next-fill" style="width:0%"></i></div>
+      </div>
+      <div id="achievements-list" class="achievements-list"></div>
+    </div>
+    <nav class="tabbar">
+      <button class="tab" data-screen="screen-main"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11 12 4l8 7"/><path d="M6 10v8a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-8"/><path d="M10 19v-5h4v5"/></svg>Главная</button>
+      <button class="tab tab-active" data-screen="screen-achievements"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="5"/><path d="m9 13-1.5 7L12 18l4.5 2L15 13"/></svg>Достижения</button>
+      <button class="tab" data-screen="screen-retro"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4"/><path d="M4 20h16"/><path d="m7 15 3.5-4 3 2.5L20 7"/></svg>Ретроспектива</button>
+    </nav>
   </section>
 
   <!-- ===== РЕТРОСПЕКТИВА ===== -->
   <section id="screen-retro" class="screen">
-    <header class="topbar">
-      <h1>Ретроспектива</h1>
-    </header>
-    <div id="retro-empty" class="empty-state" hidden>
-      Пока нет данных — они появятся после первой записи в дневнике причин.
-    </div>
-    <div id="retro-content" hidden>
-      <h2 class="chart-title">По времени суток</h2>
-      <div id="chart-time" class="bar-chart"></div>
+    <div class="scroll">
+      <header class="topbar-in"><h1>Ретроспектива</h1><p>Когда тяга сильнее всего</p></header>
+      <div id="retro-empty" class="empty-state" hidden>
+        Пока нет данных — они появятся после первой записи в дневнике причин.
+      </div>
+      <div id="retro-content" hidden>
+        <div class="kpis">
+          <div class="kpi"><div class="v" id="retro-kpi-resisted">—</div><div class="l">устоял из тяг</div></div>
+          <div class="kpi"><div class="v" id="retro-kpi-peak">—</div><div class="l">самое сложное время</div></div>
+        </div>
+        <div class="sect-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>По времени суток</div>
+        <div id="chart-time" class="chart"></div>
 
-      <h2 class="chart-title">По дням недели</h2>
-      <div id="chart-weekday" class="bar-chart"></div>
-
-      <h2 class="chart-title">По причине</h2>
-      <div id="chart-reason" class="bar-chart"></div>
+        <div class="sect-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>По дням недели</div>
+        <div id="chart-weekday" class="chart"></div>
+      </div>
     </div>
+    <nav class="tabbar">
+      <button class="tab" data-screen="screen-main"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11 12 4l8 7"/><path d="M6 10v8a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-8"/><path d="M10 19v-5h4v5"/></svg>Главная</button>
+      <button class="tab" data-screen="screen-achievements"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="5"/><path d="m9 13-1.5 7L12 18l4.5 2L15 13"/></svg>Достижения</button>
+      <button class="tab tab-active" data-screen="screen-retro"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4"/><path d="M4 20h16"/><path d="m7 15 3.5-4 3 2.5L20 7"/></svg>Ретроспектива</button>
+    </nav>
   </section>
-
-  <!-- ===== НИЖНЯЯ НАВИГАЦИЯ ===== -->
-  <nav class="tabbar">
-    <button class="tab-btn tab-active" data-screen="screen-main">Главная</button>
-    <button class="tab-btn" data-screen="screen-achievements">Достижения</button>
-    <button class="tab-btn" data-screen="screen-retro">Ретроспектива</button>
-  </nav>
 
 </main>
 
 <!-- ===== ОВЕРЛЕЙ ТЯГИ ===== -->
 <div id="craving-overlay" class="overlay" hidden>
-  <div class="overlay-card">
-    <button class="overlay-close" id="craving-close" aria-label="Закрыть">×</button>
-    <div class="craving-timer" id="craving-timer">4:00</div>
-    <div class="craving-timer-note" id="craving-timer-note">обычно тяга проходит за это время</div>
-
-    <div class="technique-card">
-      <div class="technique-category" id="technique-category"></div>
-      <div class="technique-title" id="technique-title"></div>
-      <div class="technique-desc" id="technique-desc"></div>
+  <div class="sheet">
+    <button class="close" id="craving-close" aria-label="Закрыть"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <div class="timer-wrap">
+      <div class="timer" id="craving-timer">4:00</div>
+      <div class="timer-note" id="craving-timer-note">обычно тяга проходит за это время</div>
+      <div class="breath"></div>
     </div>
-    <button class="secondary-btn" id="technique-shuffle">Показать другую</button>
+    <div class="tech">
+      <span class="cat" id="technique-category"></span>
+      <h3 id="technique-title"></h3>
+      <p id="technique-desc"></p>
+    </div>
+    <button class="ghost-btn full" id="technique-shuffle">Показать другую</button>
 
-    <div class="craving-actions">
-      <button class="success-btn" id="craving-success">Устоял</button>
-      <button class="fail-btn" id="craving-fail">Не сдержался</button>
+    <div class="actions">
+      <button class="win" id="craving-success"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 6"/></svg>Устоял</button>
+      <button class="lose" id="craving-fail"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5"/><circle cx="12" cy="16.5" r=".4"/><path d="M10.3 4.3 3 17a2 2 0 0 0 1.7 3h14.6a2 2 0 0 0 1.7-3L13.7 4.3a2 2 0 0 0-3.4 0Z"/></svg>Не сдержался</button>
     </div>
   </div>
 </div>
 
 <!-- ===== МОДАЛКА ДНЕВНИКА ===== -->
-<div id="journal-overlay" class="overlay" hidden>
-  <div class="overlay-card">
-    <button class="overlay-close" id="journal-close" aria-label="Отмена">×</button>
+<div id="journal-overlay" class="overlay overlay-bottom" hidden>
+  <div class="sheet">
+    <button class="close" id="journal-close" aria-label="Отмена"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     <h2>Почему сейчас?</h2>
-    <p class="overlay-hint">Если нажал случайно — закрой крестиком, счётчик не сбросится.</p>
+    <div class="hint"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><circle cx="12" cy="7.7" r=".4"/></svg><span>Если нажал случайно — закрой крестиком, счётчик не сбросится.</span></div>
     <div class="reason-chips" id="reason-chips">
       <button class="chip" data-reason="stress">Стресс</button>
       <button class="chip" data-reason="boredom">Скука</button>
@@ -154,25 +183,26 @@
       <button class="chip" data-reason="company">Компания</button>
       <button class="chip" data-reason="other">Другое</button>
     </div>
-    <textarea id="journal-note" placeholder="Можно коротко написать своими словами (необязательно)"></textarea>
-    <div class="journal-actions">
-      <button class="secondary-btn" id="journal-skip">Пропустить</button>
-      <button class="success-btn" id="journal-save">Сохранить</button>
+    <label class="fld" for="journal-note">Заметка (необязательно)</label>
+    <textarea id="journal-note" placeholder="Можно коротко написать своими словами…"></textarea>
+    <div class="actions">
+      <button class="ghost-btn" id="journal-skip">Пропустить</button>
+      <button class="win" id="journal-save">Сохранить</button>
     </div>
   </div>
 </div>
 
 <!-- ===== МОДАЛКА ТОЧКИ ОТСЧЁТА ===== -->
-<div id="start-overlay" class="overlay" hidden>
-  <div class="overlay-card">
-    <button class="overlay-close" id="start-close" aria-label="Закрыть">×</button>
+<div id="start-overlay" class="overlay overlay-bottom" hidden>
+  <div class="sheet">
+    <button class="close" id="start-close" aria-label="Закрыть"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     <h2>Точка отсчёта</h2>
-    <p class="overlay-hint">Когда ты вейпил в последний раз. Отсюда считаются дни и деньги.</p>
+    <div class="hint"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><circle cx="12" cy="7.7" r=".4"/></svg><span>Когда ты вейпил в последний раз. Отсюда считаются дни и деньги.</span></div>
     <input type="datetime-local" id="start-input" class="datetime-input">
     <div id="start-error" class="input-error" hidden>Нельзя выбрать время в будущем.</div>
-    <div class="journal-actions">
-      <button class="secondary-btn" id="start-cancel">Отмена</button>
-      <button class="success-btn" id="start-save">Сохранить</button>
+    <div class="actions">
+      <button class="ghost-btn" id="start-cancel">Отмена</button>
+      <button class="win" id="start-save">Сохранить</button>
     </div>
   </div>
 </div>

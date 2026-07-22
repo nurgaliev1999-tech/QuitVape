@@ -27,23 +27,3 @@ export function buildWeekdayStats(journal) {
   const order = [1, 2, 3, 4, 5, 6, 0];
   return order.map(i => ({ label: WEEKDAY_LABELS[i], count: counts[i] }));
 }
-
-export const REASON_LABELS = {
-  stress: 'Стресс',
-  boredom: 'Скука',
-  habit: 'Привычка',
-  company: 'Компания',
-  other: 'Другое'
-};
-
-export function buildReasonStats(journal) {
-  const counts = {};
-  for (const entry of journal) {
-    const key = entry.reason || 'other';
-    counts[key] = (counts[key] || 0) + 1;
-  }
-  return Object.keys(REASON_LABELS).map(key => ({
-    label: REASON_LABELS[key],
-    count: counts[key] || 0
-  }));
-}

@@ -1,7 +1,7 @@
 import { initStorage, saveState, exportData, importData } from './storage.js';
 import { pickTechnique } from './techniques.js';
 import { MILESTONES, getStreakDays } from './achievements.js';
-import { buildTimeOfDayStats, buildWeekdayStats, buildReasonStats } from './retrospective.js';
+import { buildTimeOfDayStats, buildWeekdayStats } from './retrospective.js';
 
 const DISPOSABLE_PRICE = 2000;
 const DISPOSABLE_DAYS = 14;
@@ -16,7 +16,7 @@ let selectedReason = null;
 let resetSnapshot = null; // { prevLastUseAt, addedEntryId } — для отмены сброса
 
 // ---------- навигация ----------
-const tabButtons = document.querySelectorAll('.tab-btn');
+const tabButtons = document.querySelectorAll('.tab');
 tabButtons.forEach(btn => {
   btn.addEventListener('click', () => showScreen(btn.dataset.screen));
 });
@@ -61,37 +61,100 @@ function tickMain() {
 
   document.getElementById('cravings-resisted').textContent = state.cravingsResisted;
   document.getElementById('start-current').textContent = formatDateTimeLabel(state.lastUseAt);
+
+  updateHeroProgress(elapsedDays);
 }
 
 setInterval(tickMain, 1000);
 tickMain();
 
+// ---------- прогресс-кольцо и подпись на главном экране ----------
+function nextMilestone(streakDays) {
+  return MILESTONES.find(m => streakDays < m.days) || null;
+}
+
+function updateHeroProgress(streakDays) {
+  const ring = document.getElementById('progress-ring');
+  const caption = document.getElementById('hero-caption');
+  const next = nextMilestone(streakDays);
+
+  let pct;
+  if (!next) {
+    pct = 100;
+    caption.textContent = 'Все вехи открыты — рекорд продолжается';
+  } else {
+    const prev = [...MILESTONES].reverse().find(m => streakDays >= m.days);
+    const floor = prev ? prev.days : 0;
+    pct = Math.round(((streakDays - floor) / (next.days - floor)) * 100);
+    const remaining = Math.max(0, Math.ceil(next.days - streakDays));
+    caption.textContent = remaining <= 1
+      ? `Следующая веха «${next.label}» — меньше дня`
+      : `Следующая веха «${next.label}» — ещё ${remaining} дн.`;
+  }
+  ring.style.background = `conic-gradient(var(--green) 0 ${pct}%, var(--green-soft) 0 100%)`;
+}
+
 // ---------- достижения ----------
+const LOCK_ICON = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+const MEDAL_ICON = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="5"/><path d="m9 13-1.5 7L12 18l4.5 2L15 13"/></svg>';
+
 function renderAchievements() {
   const streakDays = getStreakDays(state.lastUseAt);
+  const lastUseMs = new Date(state.lastUseAt).getTime();
+
   const list = document.getElementById('achievements-list');
   list.innerHTML = '';
+  let unlockedCount = 0;
+
   for (const m of MILESTONES) {
     const unlocked = streakDays >= m.days;
+    if (unlocked) unlockedCount++;
     const el = document.createElement('div');
-    el.className = 'achievement' + (unlocked ? ' unlocked' : '');
-    el.innerHTML = `<div class="badge">${unlocked ? '🏆' : '🔒'}</div><div class="label">${m.label}</div>`;
+    el.className = 'achievement ' + (unlocked ? 'unlocked' : 'locked');
+    let when;
+    if (unlocked) {
+      const unlockDate = new Date(lastUseMs + m.days * 86400000);
+      when = unlockDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+    } else {
+      const remaining = Math.max(1, Math.ceil(m.days - streakDays));
+      when = `ещё ${remaining} дн.`;
+    }
+    el.innerHTML = `<div class="medal">${unlocked ? MEDAL_ICON : LOCK_ICON}</div><div class="label">${m.label}</div><div class="when">${when}</div>`;
     list.appendChild(el);
+  }
+
+  document.getElementById('ach-subtitle').textContent = `${unlockedCount} из ${MILESTONES.length} открыто`;
+
+  const next = nextMilestone(streakDays);
+  if (!next) {
+    document.getElementById('progress-next-label').textContent = 'Все вехи открыты';
+    document.getElementById('progress-next-sub').textContent = '';
+    document.getElementById('progress-next-fill').style.width = '100%';
+  } else {
+    const prev = [...MILESTONES].reverse().find(m => streakDays >= m.days);
+    const floor = prev ? prev.days : 0;
+    const pct = Math.round(((streakDays - floor) / (next.days - floor)) * 100);
+    const remaining = Math.max(1, Math.ceil(next.days - streakDays));
+    document.getElementById('progress-next-label').textContent = `Следующая веха «${next.label}»`;
+    document.getElementById('progress-next-sub').textContent = `осталось ${remaining} дн.`;
+    document.getElementById('progress-next-fill').style.width = pct + '%';
   }
 }
 
 // ---------- ретроспектива ----------
 function renderBarChart(container, rows) {
   const max = Math.max(1, ...rows.map(r => r.count));
+  const peakCount = Math.max(...rows.map(r => r.count));
   container.innerHTML = '';
   for (const row of rows) {
     const pct = Math.round((row.count / max) * 100);
+    const isPeak = row.count > 0 && row.count === peakCount;
     const el = document.createElement('div');
-    el.className = 'bar-row';
+    el.className = 'row';
     el.innerHTML = `
-      <div class="bar-label">${row.label}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${row.count === 0 ? 0 : pct}%"></div></div>
-      <div class="bar-count">${row.count}</div>`;
+      <div class="lbl">${row.label}</div>
+      <div class="track"><div class="fill${isPeak ? ' peak' : ''}" style="width:${row.count === 0 ? 0 : pct}%"></div></div>
+      <div class="cnt">${row.count}</div>`;
     container.appendChild(el);
   }
 }
@@ -106,9 +169,16 @@ function renderRetrospective() {
   }
   empty.hidden = true;
   content.hidden = false;
-  renderBarChart(document.getElementById('chart-time'), buildTimeOfDayStats(state.journal));
+
+  const totalCravings = state.cravingsResisted + state.journal.length;
+  document.getElementById('retro-kpi-resisted').textContent = `${state.cravingsResisted} из ${totalCravings}`;
+
+  const timeStats = buildTimeOfDayStats(state.journal);
+  const peakBucket = timeStats.reduce((a, b) => (b.count > a.count ? b : a), timeStats[0]);
+  document.getElementById('retro-kpi-peak').textContent = peakBucket.count > 0 ? peakBucket.label.split(' ')[0] : '—';
+
+  renderBarChart(document.getElementById('chart-time'), timeStats);
   renderBarChart(document.getElementById('chart-weekday'), buildWeekdayStats(state.journal));
-  renderBarChart(document.getElementById('chart-reason'), buildReasonStats(state.journal));
 }
 
 // ---------- оверлей тяги ----------

@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>QuitVape</title>
+<meta name="theme-color" content="#0f1720">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="QuitVape">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<main class="app">
+
+  <!-- ===== ГЛАВНАЯ ===== -->
+  <section id="screen-main" class="screen screen-active">
+    <header class="topbar">
+      <h1>QuitVape</h1>
+    </header>
+
+    <div class="counter-card">
+      <div class="counter-label">Без вейпа</div>
+      <div class="counter-time" id="time-since">
+        <span id="time-days">0</span><span class="unit">дн</span>
+        <span id="time-hours">0</span><span class="unit">ч</span>
+        <span id="time-minutes">0</span><span class="unit">мин</span>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value" id="money-saved">0 ₽</div>
+        <div class="stat-label">Сэкономлено</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="disposables-saved">0</div>
+        <div class="stat-label">не куплено одноразок</div>
+      </div>
+    </div>
+
+    <div class="stat-card resisted-card">
+      <div class="stat-value" id="cravings-resisted">0</div>
+      <div class="stat-label">раз устоял против тяги</div>
+    </div>
+
+    <button id="craving-btn" class="craving-btn">Хочу вейпить</button>
+
+    <details class="health-note">
+      <summary>Что происходит с тягой</summary>
+      <p>
+        Острая тяга к никотину обычно накатывает волной и стихает сама в течение нескольких минут —
+        именно поэтому имеет смысл просто переждать и отвлечься на технику ниже. В первые дни без никотина
+        такие волны случаются чаще, а дальше — реже. Организму нужно время, чтобы дофаминовые рецепторы
+        отвыкли получать никотин извне; конкретные сроки у всех разные.
+      </p>
+    </details>
+  </section>
+
+  <!-- ===== ДОСТИЖЕНИЯ ===== -->
+  <section id="screen-achievements" class="screen">
+    <header class="topbar">
+      <h1>Достижения</h1>
+    </header>
+    <div id="achievements-list" class="achievements-list"></div>
+  </section>
+
+  <!-- ===== РЕТРОСПЕКТИВА ===== -->
+  <section id="screen-retro" class="screen">
+    <header class="topbar">
+      <h1>Ретроспектива</h1>
+    </header>
+    <div id="retro-empty" class="empty-state" hidden>
+      Пока нет данных — они появятся после первой записи в дневнике причин.
+    </div>
+    <div id="retro-content" hidden>
+      <h2 class="chart-title">По времени суток</h2>
+      <div id="chart-time" class="bar-chart"></div>
+
+      <h2 class="chart-title">По дням недели</h2>
+      <div id="chart-weekday" class="bar-chart"></div>
+
+      <h2 class="chart-title">По причине</h2>
+      <div id="chart-reason" class="bar-chart"></div>
+    </div>
+  </section>
+
+  <!-- ===== НИЖНЯЯ НАВИГАЦИЯ ===== -->
+  <nav class="tabbar">
+    <button class="tab-btn tab-active" data-screen="screen-main">Главная</button>
+    <button class="tab-btn" data-screen="screen-achievements">Достижения</button>
+    <button class="tab-btn" data-screen="screen-retro">Ретроспектива</button>
+  </nav>
+
+</main>
+
+<!-- ===== ОВЕРЛЕЙ ТЯГИ ===== -->
+<div id="craving-overlay" class="overlay" hidden>
+  <div class="overlay-card">
+    <button class="overlay-close" id="craving-close" aria-label="Закрыть">×</button>
+    <div class="craving-timer" id="craving-timer">4:00</div>
+    <div class="craving-timer-note" id="craving-timer-note">обычно тяга проходит за это время</div>
+
+    <div class="technique-card">
+      <div class="technique-category" id="technique-category"></div>
+      <div class="technique-title" id="technique-title"></div>
+      <div class="technique-desc" id="technique-desc"></div>
+    </div>
+    <button class="secondary-btn" id="technique-shuffle">Показать другую</button>
+
+    <div class="craving-actions">
+      <button class="success-btn" id="craving-success">Устоял</button>
+      <button class="fail-btn" id="craving-fail">Не сдержался</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== МОДАЛКА ДНЕВНИКА ===== -->
+<div id="journal-overlay" class="overlay" hidden>
+  <div class="overlay-card">
+    <h2>Почему сейчас?</h2>
+    <div class="reason-chips" id="reason-chips">
+      <button class="chip" data-reason="stress">Стресс</button>
+      <button class="chip" data-reason="boredom">Скука</button>
+      <button class="chip" data-reason="habit">Привычка</button>
+      <button class="chip" data-reason="company">Компания</button>
+      <button class="chip" data-reason="other">Другое</button>
+    </div>
+    <textarea id="journal-note" placeholder="Можно коротко написать своими словами (необязательно)"></textarea>
+    <div class="journal-actions">
+      <button class="secondary-btn" id="journal-skip">Пропустить</button>
+      <button class="success-btn" id="journal-save">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ТОСТ ===== -->
+<div id="toast" class="toast" hidden></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

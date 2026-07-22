@@ -479,6 +479,7 @@ html, body {
   max-width: 90vw;
   box-shadow: 0 8px 24px rgba(31,51,41,.25);
 }
+.toast[hidden] { display: none; }
 .toast-action {
   background: none;
   border: none;

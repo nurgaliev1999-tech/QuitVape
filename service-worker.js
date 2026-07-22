@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quitvape-v3';
+const CACHE_NAME = 'quitvape-v4';
 const APP_SHELL = [
   './',
   './index.html',

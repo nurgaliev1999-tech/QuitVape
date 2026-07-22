@@ -1,4 +1,4 @@
-import { loadState, saveState } from './storage.js';
+import { initStorage, saveState, exportData, importData } from './storage.js';
 import { pickTechnique } from './techniques.js';
 import { MILESTONES, getStreakDays } from './achievements.js';
 import { buildTimeOfDayStats, buildWeekdayStats, buildReasonStats } from './retrospective.js';
@@ -8,11 +8,12 @@ const DISPOSABLE_DAYS = 14;
 const DAILY_RATE = DISPOSABLE_PRICE / DISPOSABLE_DAYS; // ₽/день
 const CRAVING_SECONDS = 4 * 60;
 
-const state = loadState();
+const state = await initStorage();
 let cravingSecondsLeft = CRAVING_SECONDS;
 let cravingTimerHandle = null;
 let currentTechnique = null;
 let selectedReason = null;
+let resetSnapshot = null; // { prevLastUseAt, addedEntryId } — для отмены сброса
 
 // ---------- навигация ----------
 const tabButtons = document.querySelectorAll('.tab-btn');
@@ -28,14 +29,23 @@ function showScreen(id) {
   if (id === 'screen-retro') renderRetrospective();
 }
 
-// ---------- главный экран: счётчик ----------
+// ---------- форматирование ----------
 function formatMoney(v) {
   return new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2, minimumFractionDigits: 2 }).format(v) + ' ₽';
 }
 
+function formatDateTimeLabel(iso) {
+  const d = new Date(iso);
+  return d.toLocaleString('ru-RU', {
+    day: 'numeric', month: 'long', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+}
+
+// ---------- главный экран: счётчик ----------
 function tickMain() {
   const elapsedMs = Date.now() - new Date(state.lastUseAt).getTime();
-  const totalMinutes = Math.floor(elapsedMs / 60000);
+  const totalMinutes = Math.max(0, Math.floor(elapsedMs / 60000));
   const days = Math.floor(totalMinutes / 1440);
   const hours = Math.floor((totalMinutes % 1440) / 60);
   const minutes = totalMinutes % 60;
@@ -44,12 +54,13 @@ function tickMain() {
   document.getElementById('time-hours').textContent = hours;
   document.getElementById('time-minutes').textContent = minutes;
 
-  const elapsedDays = elapsedMs / 86400000;
+  const elapsedDays = Math.max(0, elapsedMs / 86400000);
   const moneySaved = elapsedDays * DAILY_RATE;
   document.getElementById('money-saved').textContent = formatMoney(moneySaved);
   document.getElementById('disposables-saved').textContent = (moneySaved / DISPOSABLE_PRICE).toFixed(1);
 
   document.getElementById('cravings-resisted').textContent = state.cravingsResisted;
+  document.getElementById('start-current').textContent = formatDateTimeLabel(state.lastUseAt);
 }
 
 setInterval(tickMain, 1000);
@@ -103,6 +114,7 @@ function renderRetrospective() {
 // ---------- оверлей тяги ----------
 const cravingOverlay = document.getElementById('craving-overlay');
 const journalOverlay = document.getElementById('journal-overlay');
+const startOverlay = document.getElementById('start-overlay');
 
 document.getElementById('craving-btn').addEventListener('click', openCravingOverlay);
 document.getElementById('craving-close').addEventListener('click', closeCravingOverlay);
@@ -181,6 +193,7 @@ reasonChips.forEach(chip => {
 
 document.getElementById('journal-save').addEventListener('click', saveJournalEntry);
 document.getElementById('journal-skip').addEventListener('click', skipJournalEntry);
+document.getElementById('journal-close').addEventListener('click', cancelJournalOverlay);
 
 function openJournalOverlay() {
   selectedReason = null;
@@ -193,11 +206,19 @@ function closeJournalOverlay() {
   journalOverlay.hidden = true;
 }
 
+// Закрытие крестиком = отмена, БЕЗ сброса счётчика (защита от случайного нажатия).
+function cancelJournalOverlay() {
+  closeJournalOverlay();
+}
+
 function registerUseNow(reason, note) {
   const now = new Date().toISOString();
+  const prevLastUseAt = state.lastUseAt;
+  let addedEntryId = null;
   if (reason || note) {
+    addedEntryId = Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
     state.journal.push({
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      id: addedEntryId,
       at: now,
       reason: reason || 'other',
       note: note || ''
@@ -206,6 +227,20 @@ function registerUseNow(reason, note) {
   state.lastUseAt = now;
   saveState(state);
   tickMain();
+  resetSnapshot = { prevLastUseAt, addedEntryId };
+  showToast('Счётчик сброшен', 'Отменить', undoReset);
+}
+
+function undoReset() {
+  if (!resetSnapshot) return;
+  state.lastUseAt = resetSnapshot.prevLastUseAt;
+  if (resetSnapshot.addedEntryId) {
+    state.journal = state.journal.filter(e => e.id !== resetSnapshot.addedEntryId);
+  }
+  resetSnapshot = null;
+  saveState(state);
+  tickMain();
+  showToast('Отменено, счётчик восстановлен');
 }
 
 function saveJournalEntry() {
@@ -219,14 +254,131 @@ function skipJournalEntry() {
   closeJournalOverlay();
 }
 
+// ---------- точка отсчёта ----------
+document.getElementById('edit-start-btn').addEventListener('click', openStartOverlay);
+document.getElementById('start-close').addEventListener('click', closeStartOverlay);
+document.getElementById('start-cancel').addEventListener('click', closeStartOverlay);
+document.getElementById('start-save').addEventListener('click', saveStartDate);
+
+function isoToLocalInput(iso) {
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function openStartOverlay() {
+  document.getElementById('start-input').value = isoToLocalInput(state.lastUseAt);
+  document.getElementById('start-error').hidden = true;
+  startOverlay.hidden = false;
+}
+
+function closeStartOverlay() {
+  startOverlay.hidden = true;
+}
+
+function saveStartDate() {
+  const val = document.getElementById('start-input').value;
+  if (!val) { closeStartOverlay(); return; }
+  const picked = new Date(val);
+  if (isNaN(picked.getTime())) { closeStartOverlay(); return; }
+  if (picked.getTime() > Date.now()) {
+    document.getElementById('start-error').hidden = false;
+    return;
+  }
+  state.lastUseAt = picked.toISOString();
+  saveState(state);
+  tickMain();
+  closeStartOverlay();
+  showToast('Точка отсчёта обновлена');
+}
+
+// ---------- бэкап ----------
+document.getElementById('export-btn').addEventListener('click', doExport);
+document.getElementById('import-btn').addEventListener('click', () => {
+  document.getElementById('import-file').click();
+});
+document.getElementById('import-file').addEventListener('change', doImport);
+
+function doExport() {
+  const json = exportData(state);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `quitvape-backup-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast('Копия сохранена в файл');
+}
+
+function doImport(event) {
+  const file = event.target.files && event.target.files[0];
+  event.target.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const imported = importData(String(reader.result));
+      state.lastUseAt = imported.lastUseAt;
+      state.cravingsResisted = imported.cravingsResisted;
+      state.journal = imported.journal;
+      saveState(state);
+      tickMain();
+      showToast('Данные восстановлены из файла');
+    } catch (e) {
+      showToast('Не удалось прочитать файл');
+    }
+  };
+  reader.onerror = () => showToast('Не удалось прочитать файл');
+  reader.readAsText(file);
+}
+
+// ---------- статус защиты хранилища ----------
+async function updateBackupStatus() {
+  const el = document.getElementById('backup-status');
+  let persisted = false;
+  try {
+    if (navigator.storage && navigator.storage.persisted) {
+      persisted = await navigator.storage.persisted();
+    }
+  } catch (e) { /* нет поддержки */ }
+  if (persisted) {
+    el.textContent = 'Постоянное хранилище включено, данные дублируются на телефоне. Файл-копию делай изредка на случай смены телефона.';
+  } else {
+    el.textContent = 'Данные дублируются на телефоне (два хранилища). Постоянное хранилище не подтверждено — раз в пару недель делай копию в файл.';
+  }
+}
+updateBackupStatus();
+
 // ---------- тост ----------
 let toastTimeout = null;
-function showToast(text) {
+function showToast(text, actionLabel, actionFn) {
   const toast = document.getElementById('toast');
-  toast.textContent = text;
+  const textEl = document.getElementById('toast-text');
+  const actionEl = document.getElementById('toast-action');
+  textEl.textContent = text;
+
+  if (actionLabel && actionFn) {
+    actionEl.textContent = actionLabel;
+    actionEl.hidden = false;
+    actionEl.onclick = () => {
+      actionEl.hidden = true;
+      toast.hidden = true;
+      clearTimeout(toastTimeout);
+      actionFn();
+    };
+  } else {
+    actionEl.hidden = true;
+    actionEl.onclick = null;
+  }
+
   toast.hidden = false;
   clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => { toast.hidden = true; }, 2200);
+  const duration = actionLabel ? 6000 : 2200;
+  toastTimeout = setTimeout(() => { toast.hidden = true; }, duration);
 }
 
 // ---------- service worker ----------

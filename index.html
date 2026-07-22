@@ -59,6 +59,28 @@
         отвыкли получать никотин извне; конкретные сроки у всех разные.
       </p>
     </details>
+
+    <details class="settings-note">
+      <summary>Настройки и данные</summary>
+
+      <div class="setting-row">
+        <div class="setting-text">
+          <div class="setting-title">Точка отсчёта</div>
+          <div class="setting-sub" id="start-current">—</div>
+        </div>
+        <button class="secondary-btn compact" id="edit-start-btn">Изменить</button>
+      </div>
+
+      <div class="setting-block">
+        <div class="setting-title">Резервная копия</div>
+        <div class="setting-sub" id="backup-status">Проверяю защиту хранилища…</div>
+        <div class="backup-buttons">
+          <button class="secondary-btn compact" id="export-btn">Сохранить в файл</button>
+          <button class="secondary-btn compact" id="import-btn">Восстановить из файла</button>
+        </div>
+        <input type="file" id="import-file" accept="application/json,.json" hidden>
+      </div>
+    </details>
   </section>
 
   <!-- ===== ДОСТИЖЕНИЯ ===== -->
@@ -122,7 +144,9 @@
 <!-- ===== МОДАЛКА ДНЕВНИКА ===== -->
 <div id="journal-overlay" class="overlay" hidden>
   <div class="overlay-card">
+    <button class="overlay-close" id="journal-close" aria-label="Отмена">×</button>
     <h2>Почему сейчас?</h2>
+    <p class="overlay-hint">Если нажал случайно — закрой крестиком, счётчик не сбросится.</p>
     <div class="reason-chips" id="reason-chips">
       <button class="chip" data-reason="stress">Стресс</button>
       <button class="chip" data-reason="boredom">Скука</button>
@@ -138,8 +162,26 @@
   </div>
 </div>
 
+<!-- ===== МОДАЛКА ТОЧКИ ОТСЧЁТА ===== -->
+<div id="start-overlay" class="overlay" hidden>
+  <div class="overlay-card">
+    <button class="overlay-close" id="start-close" aria-label="Закрыть">×</button>
+    <h2>Точка отсчёта</h2>
+    <p class="overlay-hint">Когда ты вейпил в последний раз. Отсюда считаются дни и деньги.</p>
+    <input type="datetime-local" id="start-input" class="datetime-input">
+    <div id="start-error" class="input-error" hidden>Нельзя выбрать время в будущем.</div>
+    <div class="journal-actions">
+      <button class="secondary-btn" id="start-cancel">Отмена</button>
+      <button class="success-btn" id="start-save">Сохранить</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== ТОСТ ===== -->
-<div id="toast" class="toast" hidden></div>
+<div id="toast" class="toast" hidden>
+  <span id="toast-text"></span>
+  <button id="toast-action" class="toast-action" hidden></button>
+</div>
 
 <script type="module" src="js/app.js"></script>
 </body>

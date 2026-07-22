@@ -301,4 +301,74 @@ html, body {
   border-radius: 20px;
   font-size: 14px;
   z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 90vw;
 }
+.toast-action {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 0;
+  white-space: nowrap;
+}
+
+/* ---- Настройки и данные ---- */
+.settings-note {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  color: var(--text-dim);
+  font-size: 13px;
+  margin-top: 12px;
+}
+.settings-note summary {
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+}
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px 0;
+}
+.setting-block { margin: 16px 0 4px; }
+.setting-title { color: var(--text); font-weight: 600; font-size: 14px; }
+.setting-sub { color: var(--text-dim); font-size: 12px; margin-top: 3px; line-height: 1.4; }
+.secondary-btn.compact {
+  width: auto;
+  margin-bottom: 0;
+  padding: 9px 14px;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.backup-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.backup-buttons .secondary-btn.compact { flex: 1; }
+
+.overlay-hint {
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 4px 0 14px;
+}
+.datetime-input {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid #2c3a48;
+  background: var(--card-2);
+  color: var(--text);
+  padding: 12px;
+  font-size: 15px;
+  font-family: inherit;
+}
+.input-error { color: var(--danger); font-size: 13px; margin-top: 8px; }
